@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+</style>
+<body>
+  <button>Click to show next location</button>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script>
+
+  // show next location
+  $(document).ready(function() {
+
+  });
+  var showNextLocation = function() {
+
+  }
+
+  // define width and height for svg canvase
+  var width = 960;
+  var height = 1200;
+
+  // add array of locations, which contain:
+    // venue name
+    // tour date
+    // city
+    // state
+    // latitude
+    // longitude
+    // link to setlist (?)
+
+  var lineData = [ {"x": 42.347622, "y": -71.095709}, {"x": 40.758064, "y": -73.986219} ];  
+  var locations = [];
+
+  var Winter2011Boston = {
+    venueName: "House of Blues",
+    tourDate: new Date(2011, 01, 27),
+    city: "Boston",
+    state: "MA",
+    latitude: 42.347622, 
+    longitude: -71.095709,
+    setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-27"
+  };
+  var Winter2011NYC = {
+    venueName: "Best Buy Theater",
+    tourDate: new Date(2011, 01, 28),
+    city: "New York",
+    state: "NY",
+    latitude: 40.758064, 
+    longitude: -73.986219,
+    setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-28"
+  };
+
+  var Winter2011Philly = {
+    venueName: "Electric Factory",
+    tourDate: new Date(2011, 01, 29),
+    city: "Philadelphia",
+    state: "PA",
+    latitude: 39.959033, 
+    longitude: -75.149963,
+    setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-29"
+  };
+
+  var Winter2011Baltimore = {
+    venueName: "Ram's Head Live!",
+    tourDate: new Date(2011, 01, 30),
+    city: "Baltimore",
+    state: "MD",
+    latitude: 39.289276,
+    longitude: -76.607262,
+    setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-30"
+  };
+
+  var Winter2011Brooklyn = {
+    venueName: "Brooklyn Bowl",
+    tourDate: new Date(2011, 01, 31),
+    city: "Brooklyn",
+    state: "NY",
+    latitude: 40.722166,
+    longitude: -73.957314,
+    setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-31"
+  };
+
+  locations.push(Winter2011Boston, 
+                 Winter2011NYC, 
+                 Winter2011Philly,
+                 Winter2011Baltimore,
+                 Winter2011Brooklyn);
+
+  console.log(locations);
+
+  var links = [];
+  for (var i = 0; i < locations.length - 1; i++) {
+    // debugger;
+    var coordinates = {
+      xpoint1: locations[i].latitude, 
+      ypoint1: locations[i].longitude,
+      xpoint2: locations[i + 1].latitude,
+      ypoint2: locations[i + 1].longitude
+    }
+    links.push(coordinates);  
+  }
+
+
+  // assign a variable to the svg canvas element with pre-determined width and height
+  var svg = d3.select('body')
+              .append('svg')
+              .attr('width', width)
+              .attr('height', height);
+
+  d3.json("world.json", function(err, world) {
+    // throw error if file does not correctly load
+    if (err) {
+      console.log(err);
+    }
+    
+    // console.log out topography object
+    console.log(world);
+
+    // create a states variable, which stores the converted GeoJSON object using the built-in TopoJSON feature method
+    var states = topojson.feature(world, world.objects.states);
+
+    // create a mercator projection for display (https://github.com/mbostock/d3/wiki/Geo-Projections)
+    // use albersUsa to display USA already ready to go
+    var projection = d3.geo.albersUsa();
+
+    // create a path variable to store the path generator                       
+    var path = d3.geo.path()
+                 .projection(projection);       
+
+    // append path to canvas
+    svg.append("path")
+      .datum(states)
+      .attr("d", path);
+
+    svg.selectAll('.states')
+       .data(states.features)
+       .enter()
+       .append('path')
+       .attr('class', function(d) {
+         return 'states' + d.id;
+       })
+       .attr('d', path)
+       .style("fill",function() {
+         return "hsl(" + Math.random() * 360 + ",100%,50%)";
+       });
+
+    svg.selectAll('circle')
+       .data(locations)
+       .enter()
+       // .transition.delay(1000)
+       .append('circle')
+       .attr('r', 1)
+       .attr('transform', function(locations) {        
+         return 'translate(' + projection([locations.longitude, locations.latitude]) + ')';
+         });
+
+    var pathLine = d3.svg.line()
+                     .interpolate("cardinal")
+                     .x(function(d) { return projection([d.lon, d.lat])[0]; })
+                     .y(function(d) { return projection([d.lon, d.lat])[1]; });
+                
+    var testCoordinates = [{"lat": 42.347622, "lon": -71.095709},
+                           {"lat": 40.758064, "lon": -73.986219},
+                           {"lat": 39.959033, "lon": -75.149963},
+                           {"lat": 39.289276, "lon": -76.607262},
+                           {"lat": 40.722166, "lon": -73.957314}];
+
+    var testPath = svg.append("path")
+                      .attr("class","path")
+                      .attr("stroke-width", .5)
+                      .attr("stroke", "black")
+                      .attr("d",pathLine(testCoordinates))
+                      .transition()                    
+                      .duration(10000)
+                      .attrTween('d', pathTween);
+    
+    function pathTween() {
+        var interpolate = d3.scale.quantile()
+                .domain([0,1])
+                .range(d3.range(1, testCoordinates.length + 1));
+        return function(t) {
+            return pathLine(testCoordinates.slice(0, interpolate(t)));
+        };
+    };
+
+  });
+  </script>
+</body>
