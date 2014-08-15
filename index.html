@@ -1,3 +1,4 @@
+<!-- // code to start the server: ruby -run -e httpd . -p 5000 -->
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
@@ -7,31 +8,14 @@
   <button>Click to show next location</button>
   <script src="http://d3js.org/d3.v3.min.js"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
-
-  // show next location
-  $(document).ready(function() {
-
-  });
-  var showNextLocation = function() {
-
-  }
 
   // define width and height for svg canvase
   var width = 960;
   var height = 1200;
-
-  // add array of locations, which contain:
-    // venue name
-    // tour date
-    // city
-    // state
-    // latitude
-    // longitude
-    // link to setlist (?)
-
-  var lineData = [ {"x": 42.347622, "y": -71.095709}, {"x": 40.758064, "y": -73.986219} ];  
   var locations = [];
+  var showNextLocation = function(){};
 
   var Winter2011Boston = {
     venueName: "House of Blues",
@@ -42,6 +26,7 @@
     longitude: -71.095709,
     setListURL: "http://allthings.umphreys.com/setlists/?date=2011-01-27"
   };
+
   var Winter2011NYC = {
     venueName: "Best Buy Theater",
     tourDate: new Date(2011, 01, 28),
@@ -102,7 +87,6 @@
     links.push(coordinates);  
   }
 
-
   // assign a variable to the svg canvas element with pre-determined width and height
   var svg = d3.select('body')
               .append('svg')
@@ -156,35 +140,65 @@
          return 'translate(' + projection([locations.longitude, locations.latitude]) + ')';
          });
 
-    var pathLine = d3.svg.line()
-                     .interpolate("cardinal")
-                     .x(function(d) { return projection([d.lon, d.lat])[0]; })
-                     .y(function(d) { return projection([d.lon, d.lat])[1]; });
-                
-    var testCoordinates = [{"lat": 42.347622, "lon": -71.095709},
-                           {"lat": 40.758064, "lon": -73.986219},
-                           {"lat": 39.959033, "lon": -75.149963},
-                           {"lat": 39.289276, "lon": -76.607262},
-                           {"lat": 40.722166, "lon": -73.957314}];
+        // function relating to button click to show next location
+    showNextLocation = function() {
+      // draw line to next location
+      // show dot of next 
+      // show pop-up div of "cool" information
 
-    var testPath = svg.append("path")
+      // need to not hard-code these locations - just for testing purposes
+      var startingPoint = {"lat": locations[0].latitude, "lon": locations[0].longitude};
+      var endingPoint = {"lat": locations[1].latitude, "lon": locations[1].longitude};
+      var coordinates = [startingPoint, endingPoint];
+      console.log(coordinates);
+      
+      // create the new path between two locations
+      // this function can be done outside the function - just need to call it properly.
+      var newPathLine = d3.svg.line()
+                          .interpolate('cardinal')
+                          .x(function(d) {
+                            return projection([d.lon, d.lat])[0];
+                          })
+                          .y(function(d) {
+                            return projection([d.lon, d.lat])[1];
+                          });
+
+      // create path to be used                    
+      var testPath = svg.append("path")
                       .attr("class","path")
                       .attr("stroke-width", .5)
                       .attr("stroke", "black")
-                      .attr("d",pathLine(testCoordinates))
-                      .transition()                    
-                      .duration(10000)
-                      .attrTween('d', pathTween);
-    
-    function pathTween() {
-        var interpolate = d3.scale.quantile()
-                .domain([0,1])
-                .range(d3.range(1, testCoordinates.length + 1));
-        return function(t) {
-            return pathLine(testCoordinates.slice(0, interpolate(t)));
-        };
+                      .attr("d",newPathLine(coordinates));                        
     };
 
   });
   </script>
 </body>
+<!--     // var pathLine = d3.svg.line()
+    //                  .interpolate("cardinal")
+    //                  .x(function(d) { return projection([d.lon, d.lat])[0]; })
+    //                  .y(function(d) { return projection([d.lon, d.lat])[1]; });
+                
+    // var testCoordinates = [{"lat": 42.347622, "lon": -71.095709},
+    //                        {"lat": 40.758064, "lon": -73.986219},
+    //                        {"lat": 39.959033, "lon": -75.149963},
+    //                        {"lat": 39.289276, "lon": -76.607262},
+    //                        {"lat": 40.722166, "lon": -73.957314}];
+
+    // var testPath = svg.append("path")
+    //                   .attr("class","path")
+    //                   .attr("stroke-width", .5)
+    //                   .attr("stroke", "black")
+    //                   .attr("d",pathLine(testCoordinates))
+    //                   .transition()                    
+    //                   .duration(10000)
+    //                   .attrTween('d', pathTween);
+    
+    // function pathTween() {
+    //     var interpolate = d3.scale.quantile()
+    //             .domain([0,1])
+    //             .range(d3.range(1, testCoordinates.length + 1));
+    //     return function(t) {
+    //         return pathLine(testCoordinates.slice(0, interpolate(t)));
+    //     };
+    // }; -->
