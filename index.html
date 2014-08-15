@@ -11,12 +11,21 @@
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
 
-  // define width and height for svg canvase
+  // define width and height for svg canvas
   var width = 960;
   var height = 1200;
+  
+  // declare empty locations array to store all location objects
   var locations = [];
-  var showNextLocation = function(){};
 
+  // storage point for next line to be drawn
+  var firstIndex = 0;
+  var secondIndex = 1;
+
+  // declare global projection value to be used
+  var projection = d3.geo.albersUsa();
+
+  // manually (for now) declare all locations on the map
   var Winter2011Boston = {
     venueName: "House of Blues",
     tourDate: new Date(2011, 01, 27),
@@ -107,7 +116,6 @@
 
     // create a mercator projection for display (https://github.com/mbostock/d3/wiki/Geo-Projections)
     // use albersUsa to display USA already ready to go
-    var projection = d3.geo.albersUsa();
 
     // create a path variable to store the path generator                       
     var path = d3.geo.path()
@@ -141,37 +149,42 @@
          });
 
         // function relating to button click to show next location
+  });
     showNextLocation = function() {
       // draw line to next location
       // show dot of next 
       // show pop-up div of "cool" information
-
+      if (secondIndex < locations.length){
       // need to not hard-code these locations - just for testing purposes
-      var startingPoint = {"lat": locations[0].latitude, "lon": locations[0].longitude};
-      var endingPoint = {"lat": locations[1].latitude, "lon": locations[1].longitude};
-      var coordinates = [startingPoint, endingPoint];
-      console.log(coordinates);
-      
-      // create the new path between two locations
-      // this function can be done outside the function - just need to call it properly.
-      var newPathLine = d3.svg.line()
-                          .interpolate('cardinal')
-                          .x(function(d) {
-                            return projection([d.lon, d.lat])[0];
-                          })
-                          .y(function(d) {
-                            return projection([d.lon, d.lat])[1];
-                          });
+        var startingPoint = {"lat": locations[firstIndex].latitude, "lon": locations[firstIndex].longitude};
+        var endingPoint = {"lat": locations[secondIndex].latitude, "lon": locations[secondIndex].longitude};
+        var coordinates = [startingPoint, endingPoint];
+        console.log(coordinates);
+        
+        // create the new path between two locations
+        // this function can be done outside the function - just need to call it properly.
+        var newPathLine = d3.svg.line()
+                            .interpolate('cardinal')
+                            .x(function(d) {
+                              return projection([d.lon, d.lat])[0];
+                            })
+                            .y(function(d) {
+                              return projection([d.lon, d.lat])[1];
+                            });
 
-      // create path to be used                    
-      var testPath = svg.append("path")
-                      .attr("class","path")
-                      .attr("stroke-width", .5)
-                      .attr("stroke", "black")
-                      .attr("d",newPathLine(coordinates));                        
+        // create path to be used                    
+        var testPath = svg.append("path")
+                        .attr("class","path")
+                        .attr("stroke-width", .5)
+                        .attr("stroke", "black")
+                        .attr("d",newPathLine(coordinates)); 
+
+        // create a new element that stores the other data about the 
+        firstIndex++;
+        secondIndex++;                       
+      }
     };
 
-  });
   </script>
 </body>
 <!--     // var pathLine = d3.svg.line()
